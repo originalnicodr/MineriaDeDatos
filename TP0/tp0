@@ -9,8 +9,13 @@ diagonal <- function(n,d,c){
 l1 <- function(theta)return((theta+pi)/(4*pi))
 l2 <- function(theta)return((theta)/(4*pi))
 
-identificar_espiral <-function(t,r){
-    theta <- if (t > 0) t%(2*pi) else {(2*pi + t)) * 360 / (2*pi)}
+identificar_espiral <- function(t,r){
+    if (t > 0) {
+        theta <- t%%(2*pi)
+    } else {
+        theta <- (2*pi + t)
+    }
+    #print(theta)
 
     if ((l2(theta)<= r) && (r <=l1(theta))){
         return(0)
@@ -33,23 +38,111 @@ identificar_espiral <-function(t,r){
     else return(2)
 }
 
-espirales <- function(n){
-    cord<-t(replicate(n,runif(2,-1,1)))
-    r <- sqrt(cord[,1]^2+cord[,2]^2)
-
-    #while(r[r>1] != vector()) {
-    #    nuevas_cord<-t(replicate(length(r[r>1]),runif(2,-1,1)))
-    #    cord<-cord[r<=1]
-    #    r<-r[r<=1]
-    #    rbind(cord,nuevas_cord)
-    #}
-
-
-    theta <-atan2(cord[,2],cord[,1])
-
-    return(cbind(theta,r))
-    #clases <- sapply(t(cbind(theta,r)),identificar_espiral)
-    #return(as.data.frame(cbind(cord,clases)))
+how_many_rows <- function(M){
+    r <- dim(M)[1]
+    if (is.null(r)) r <- 0
+    return(r)
 }
 
-clases <- identificar_espiral(theta,r)
+espirales <- function(n){
+    cord<-t(replicate(n,runif(2,-1,1)))
+    r <- t(t(sqrt(cord[,1]^2+cord[,2]^2)))
+
+    theta <-t(t(atan2(cord[,2],cord[,1])))
+    clase <- t(t(mapply(identificar_espiral,theta,r)))
+
+    #print(cord)
+    #print(r)
+    #print(theta)
+    #print(clase) #print(t_matrix[,5])
+
+    t_matrix <- cbind(cbind(cbind(cord,r),theta),clase)
+    t_matrix <- t_matrix[order(t_matrix[,5]),]
+
+    #print('t_matrix pre filtrado')
+    #print(t_matrix)
+
+    #t_matrix=[x,y,r,theta,clase]
+
+    while(sum(t_matrix[,3]>1) != 0 || sum(t_matrix[,5]==1)!=n/2) {
+
+        #if (dim(t_matrix)[1] > n) break
+        
+        #print('t_matrix pre filtrado')
+        #print(t_matrix)
+
+        #----------Saco puntos fuera del circulo y agrego nuevos----------
+        #print(t_matrix)
+        #print(t_matrix[t_matrix[,3]>1,])
+        m<-sum(t_matrix[,3]>1)
+        #print(m)
+
+        if (m!=0){
+            #print('t_matrix pre filtrado 1')
+            #print(t_matrix)
+
+            #print(dim(t_matrix[t_matrix[,3]>1,])[1])
+
+
+
+            t_matrix<-t_matrix[t_matrix[,3]<=1,]
+
+            cord<-t(replicate(m,runif(2,-1,1)))
+            r <- t(t(sqrt(cord[,1]^2+cord[,2]^2)))
+
+            theta <-t(t(atan2(cord[,2],cord[,1])))
+            clase <- t(t(mapply(identificar_espiral,theta,r)))
+
+            nueva_t_matrix <- cbind(cbind(cbind(cord,r),theta),clase)
+
+            t_matrix <- rbind(t_matrix,nueva_t_matrix)
+            t_matrix <- t_matrix[order(t_matrix[,5]),]
+            #------------------------------------------------
+            #print('t_matrix post filtrado 1')
+            #print(t_matrix)
+        }
+
+
+        #----------Saco puntos de clases ya completas y agrego nuevos----------
+        m<-0
+        if (sum(t_matrix[,5]==0)>n/2){
+            print('muchos ceros')
+            m <-sum(t_matrix[,5]==0) - n/2  #por que el primer indice es 1
+            t_matrix<-t_matrix[(m+1):how_many_rows(t_matrix),]
+        } else if (sum(t_matrix[,5]==1)>n/2){
+            print('muchos unos')
+            m <-sum(t_matrix[,5]==1) - n/2 + 1 #por que el primer indice es 1
+            t_matrix<-t_matrix[1:(how_many_rows(t_matrix)-m),]
+        }
+
+        if (m!=0){
+            cord<-t(replicate(m,runif(2,-1,1)))
+            r <- t(t(sqrt(cord[,1]^2+cord[,2]^2)))
+
+            theta <-t(t(atan2(cord[,2],cord[,1])))
+            clase <- t(t(mapply(identificar_espiral,theta,r)))
+
+            nueva_t_matrix <- cbind(cbind(cbind(cord,r),theta),clase)
+
+            t_matrix <- rbind(t_matrix,nueva_t_matrix)
+            t_matrix <- t_matrix[order(t_matrix[,5]),]
+        }
+        #------------------------------------------------
+
+        #print(t_matrix)
+        print('Cantidad puntos fuera del circulo')
+        print(dim(c(t_matrix[t_matrix[,3]>1,]))[1])
+        print('Porcentaje clase 0')
+        print(sum(t_matrix[,5]==0))
+        print('Porcentaje clase 1')
+        print(sum(t_matrix[,5]==1))
+        #cat("\014")  
+    }
+
+    #theta <-atan2(cord[,2],cord[,1])
+    #clase <- mapply(identificar_espiral,theta,r)
+    #return(cbind(theta,r))
+    return(as.data.frame(t_matrix))
+}
+
+#plot(test$V1, test$V2, main="Espirales", xlab="X", ylab="Y", col=ifelse(test$V5==1, "blue","red"))
