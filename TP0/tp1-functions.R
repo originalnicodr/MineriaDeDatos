@@ -121,7 +121,7 @@ espirales <- function(n){
 
 library(rpart)
 
-cross_validation <- function(m,k){
+cross_validation_diag_tree <- function(m,k){
     class_index<-dim(m)[2]
     clases<-unique(m[,3])
 
@@ -134,23 +134,23 @@ cross_validation <- function(m,k){
             c_p<- sum(m[,3]==c)/length(m[,3])
             c_cant<-c_p*length(m[,3])/k
 
-            t_train_m<-m[m[,3]==c,]
+            t_test_m<-m[m[,3]==c,]
             #t_test_m<-m[m[,3]!=c,]
             #print("index")
             #print((c_cant*(n-1)+1):(c_cant*n))
 
 
-            indexes_train<- (c_cant*(n-1)+1):(c_cant*n)
+            indexes_test<- (c_cant*(n-1)+1):(c_cant*n)
 
-            indexes_test<-setdiff(1:length(t_train_m[,3]),indexes_train)
+            indexes_train<-setdiff(1:length(t_test_m[,3]),indexes_test)
 
-            t_test_m<-t_train_m[indexes_test,]
+            t_train_m<-t_test_m[indexes_train,]
 
-            
-
-            t_train_m<-t_train_m[indexes_train,]
-            #print("t_m")
-            #print(t_m)
+            t_test_m<-t_test_m[indexes_test,]
+            #print("t_train_m")
+            #print(t_train_m)
+            #print("t_test_m")
+            #print(t_test_m)
             train_folder<-rbind(train_folder,t_train_m)
             test_folder<-rbind(test_folder,t_test_m)
         }
@@ -161,25 +161,147 @@ cross_validation <- function(m,k){
 
         #print("train_folder")
         #print(train_folder)
-        print("test_folder")
-        print(test_folder)
+
+        #print("test_folder")
+        #print(test_folder)
 
         
         class_column_name<-names(train_folder)[ncol(train_folder)]
         #print(class_column_name)
 
         mod.tree <- rpart("V3~.", data=train_folder, method="class")
+
         #print("subset(test_folder, select = V5)")
         #print(subset(test_folder, select = V5))
         #print("predict")
         #print(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V3),type="class"))))
-        print("aciertos")
-        print(sum(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V3),type="class")))==subset(test_folder, select = V3)))
         #print(predict(mod.tree,subset(test_folder, select = -V3),type="class"))
-        error <- 1-sum(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V3),type="class")))==subset(test_folder, select = V3))/dim(m)[1]
+        error <- 1-sum(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V3),type="class")))==subset(test_folder, select = V3))/dim(test_folder)[1]
         folders_errors<-c(folders_errors,error)
 
     }
+
+    print(folders_errors)
+    return(sum(folders_errors)/k)
+}
+
+
+cross_validation_esp_tree <- function(m,k){
+    class_index<-dim(m)[2]
+    clases<-unique(m[,3])
+
+    folders_errors<-{}
+    for (n in 1:k){
+
+        train_folder<-{}
+        test_folder<-{}
+        for (c in clases){ 
+            c_p<- sum(m[,3]==c)/length(m[,3])
+            c_cant<-c_p*length(m[,3])/k
+
+            t_test_m<-m[m[,3]==c,]
+            #t_test_m<-m[m[,3]!=c,]
+            #print("index")
+            #print((c_cant*(n-1)+1):(c_cant*n))
+
+
+            indexes_test<- (c_cant*(n-1)+1):(c_cant*n)
+
+            indexes_train<-setdiff(1:length(t_test_m[,3]),indexes_test)
+
+            t_train_m<-t_test_m[indexes_train,]
+
+            t_test_m<-t_test_m[indexes_test,]
+            #print("t_train_m")
+            #print(t_train_m)
+            #print("t_test_m")
+            #print(t_test_m)
+            train_folder<-rbind(train_folder,t_train_m)
+            test_folder<-rbind(test_folder,t_test_m)
+        }
+
+        #trees
+        train_folder<-as.data.frame(train_folder)
+        test_folder<-as.data.frame(test_folder)
+
+        #print("train_folder")
+        #print(train_folder)
+
+        #print("test_folder")
+        #print(test_folder)
+
+        
+        class_column_name<-names(train_folder)[ncol(train_folder)]
+        #print(class_column_name)
+
+        mod.tree <- rpart("V5~.", data=train_folder, method="class")
+
+        #print("aciertos")
+        #print(sum(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V5),type="class")))==subset(test_folder, select = V3)))
+        #print("subset(test_folder, select = V5)")
+        #print(subset(test_folder, select = V5))
+        #print("predict")
+        #print(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V3),type="class"))))
+        #print(predict(mod.tree,subset(test_folder, select = -V3),type="class"))
+        error <- 1-sum(as.numeric(as.vector(predict(mod.tree,subset(test_folder, select = -V5),type="class")))==subset(test_folder, select = V5))/dim(test_folder)[1]
+        folders_errors<-c(folders_errors,error)
+
+    }
+
+    print(folders_errors)
+    return(sum(folders_errors)/k)
+}
+
+
+cross_validation_knn <- function(m,k){
+    class_index<-dim(m)[2]
+    clases<-unique(m[,3])
+
+    folders_errors<-{}
+    for (n in 1:k){
+
+        train_folder<-{}
+        test_folder<-{}
+        for (c in clases){ 
+            c_p<- sum(m[,3]==c)/length(m[,3])
+            c_cant<-c_p*length(m[,3])/k
+
+            t_test_m<-m[m[,3]==c,]
+            #t_test_m<-m[m[,3]!=c,]
+            #print("index")
+            #print((c_cant*(n-1)+1):(c_cant*n))
+
+
+            indexes_test<- (c_cant*(n-1)+1):(c_cant*n)
+
+            indexes_train<-setdiff(1:length(t_test_m[,3]),indexes_test)
+
+            t_train_m<-t_test_m[indexes_train,]
+
+            t_test_m<-t_test_m[indexes_test,]
+            #print("t_train_m")
+            #print(t_train_m)
+            #print("t_test_m")
+            #print(t_test_m)
+            train_folder<-rbind(train_folder,t_train_m)
+            test_folder<-rbind(test_folder,t_test_m)
+        }
+        train_folder<-as.data.frame(train_folder)
+        test_folder<-as.data.frame(test_folder)
+
+        #print("train_folder")
+        #print(train_folder)
+
+        
+        class_column_name<-names(train_folder)[ncol(train_folder)]
+        #print(class_column_name)
+
+        mod.knn <- knn(train=train_folder[,-3],test=test_folder[,-3],cl=train_folder[,3],,k=3)
+        error <- 1-sum(mod.knn==test_folder[,3])/dim(test_folder)[1]
+        folders_errors<-c(folders_errors,error)
+
+    }
+
     print(folders_errors)
     return(sum(folders_errors)/k)
 }
