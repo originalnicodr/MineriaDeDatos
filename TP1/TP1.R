@@ -124,12 +124,12 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 		num.feat<-num.feat-1
 	}
 
-	list.feat<-list.feat[-length(list.feat)]
+	list.feat<-c(list.feat[-length(list.feat)],keep.feat)
 
 	print(list.feat)
 
 
-	search.names<-c("AllVariables",colnames(x)[list.feat])
+	search.names<-colnames(x)[list.feat]#c("AllVariables",colnames(x)[list.feat])
 
 	#print("search.names")
 	#print(search.names)
@@ -315,7 +315,57 @@ imp.linsvm <- function(x.train,y,C=100)
 }
 
 
-#filter con kruskal esta en las slides
+
+#---------------------------------------------------------------------------
+# Filtro no parametrico Kruskal-Wallis
+#---------------------------------------------------------------------------
+kwfilter <- function(x,y){
+	stats<-c()
+	for (i in 1:(dim(x)[2])){
+		c<-x[,i]
+		stats<-c(stats,kruskal.test(c,y)[1]$statistic)
+	}
+	#print(sort(stats))
+	return(sort(stats,decreasing = TRUE,index.return = TRUE)$ix)
+}
+
+#---------------------------------------------------------------------------
+# Filtro no parametrico Kruskal-Wallis
+#---------------------------------------------------------------------------
+rfe<-function(T,M){
+	F<-1:(dim(T)[2]-1)
+	maxft<-length(F)
+	R<-double(maxft)
+	for (i in 1:maxft){
+		#print(F)
+		#print(C)
+		#y.pos<-length(F)
+		#list.feat<-do.call(M, T[F],T[maxft+1]$Species)#M(T[F],T[maxft+1])
+		#print(C)
+		#print(T[maxft+1]$Species)
+		test<-(M(T[F],T[maxft+1]$Species)$feats)
+		#print(test)
+		list.feat<-F[test]
+		#print(list.feat$feats)
+		f<-list.feat[length(F)]#$feats[length(F)]
+		#print(length(F))
+		#print(f)
+		R[maxft-i+1]<-f
+		print("list.feat")
+		print(list.feat)
+		#print("maxft-i+1")
+		#print(maxft-i+1)
+		print("f")
+		print(f)
+		#print("F")
+		#print(F)
+		F<-F[F!=f]
+		#print("F<-F[F!=f]")
+		#print(F)
+	}
+	return(R)
+}
+
 
 
 library(randomForest)
@@ -331,28 +381,34 @@ BACKW.rf <-backward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,eq
 #BACKW.lda<-backward.ranking(iris[,-5],iris[,5],method="lda.est")
 
 
-#---------------------------------------------------------------------------
-# Filtro no parametrico Kruskal-Wallis
-#---------------------------------------------------------------------------
-kwfilter <- function(x,y){
-	for (i in 1:(dim(x)[2])){
-		c<-x[,i]
-		print(kruskal.test(c,y))
-	}
-}
-
-#---------------------------------------------------------------------------
-# Filtro no parametrico Kruskal-Wallis
-#---------------------------------------------------------------------------
-rfe<-function(T,F,M){
-	maxft<-length(F)
-	R<-double(maxft)
-	for i in 1:maxft{
-		list.feat<-M(F,T)
-		f<-list.feat[maxft]
-		R[maxft-i+1]<-f
-		F<-F[F!=f]
-	}
-}
-
 #kwfilter(iris[,-5],iris[,5])
+#print(iris[,-5])
+#print(iris[,5])
+r<-rfe(iris,imp.linsvm)
+
+#a<-imp.rf(iris[,-5],iris[,5])
+
+#ej2
+
+#ej3
+dataset<-diagonal(10,500,2)
+clases<-dataset[dim(dataset)[2]]
+dataset<-dataset[dim(dataset)[-2]]
+ruido<-replicate(500,replicate(90,generarruido))
+dataset<-cbind(dataset,ruido)
+
+#Wrapper forward
+FORW.rf.est.aciertos<-list()
+for (i in 1:30){
+	#----Dataset generation-----
+	dataset<-diagonal(10,500,2)
+	clases<-dataset[dim(dataset)[2]]
+	dataset<-dataset[dim(dataset)[-2]]
+	ruido<-replicate(500,replicate(90,generarruido))
+	dataset<-cbind(dataset,ruido)
+	#---------------------------
+
+	features<-forward.ranking(dataset,clases,method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)$imp[1:10]
+	FORW.rf.est.aciertos <- append(FORW.rf.est.aciertos, sum(features[features %in% 1:10])/10)
+}
+print(sum(FORW.rf.est.aciertos)/30)
