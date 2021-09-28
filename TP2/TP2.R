@@ -71,7 +71,10 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
     #loop principal. A cada paso agrego todas las variables disponibles, de a una, le mido el error y me quedo con la de minimo error. Hasta llegar a meter todas.
 	while(num.feat>1){
         #class.error guarda el error de cada modelo. Son max.feat-num.feat modelos.
-		class.error<-double(max.feat-num.feat)
+		class.error<-double(num.feat)
+
+		#print("tamalño class.error")
+		#print(max.feat-num.feat)
 		#para cada variable que me queda, la agrego al dataset del paso anterior, entreno el modelo y le mido el error.
 		#print("num.feat")
 		#print(num.feat)
@@ -103,10 +106,16 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 
 
 			#x.train<-x.prev[,-keep.feat[i]]
+
+			print(list.feat)
+			#print("2+max.feat-num.feat")
+			#print(2+max.feat-num.feat)
+
+
 			x.train<-as.matrix(x[,-c(keep.feat[i],list.feat[2:(1+max.feat-num.feat)])]) #las columnas que vengo sacando hasta ahora (sin el 0) mas la nueva
 
-			print(-c(keep.feat[i],list.feat[2:(1+max.feat-num.feat)]))
-			print(dim(x.train))
+			
+			#print(dim(x.train))
 
 			#class.error[i] <- do.call(method, c(list(x.train, y), list(...)) )
 			class.error[i] <- do.call(method, c(list(x.train, y), list(...)) )
@@ -118,6 +127,13 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 		if(verbosity>1) cat("\n---------\nStep ",max.feat-num.feat+1,"\nFeature ",best.index)
 
 		#x.prev<-x.prev[,-keep.feat[best.index]]
+
+		print("class.error")
+		print(class.error)
+		print("best.index")
+		print(best.index)
+		print("keep.feat")
+		print(keep.feat)
 
 		keep.feat<-keep.feat[-best.index]
 		if(verbosity>2) cat("\nNew search list: ",keep.feat)
@@ -253,8 +269,14 @@ forward.ranking <- function(x,y,method,verbosity=0,... )
 #---------------------------------------------------------------------------
 rf.est <- function(x.train,y,equalize.classes=TRUE,tot.trees=500,mtry=0)
 {
-	#print("rf.est")
+	#print("typeof(x)")
+	#print(typeof(x.train))
 	#print(x.train)
+	#print("typeof(y)")
+	#print(typeof(y))
+	#print("y")
+	#print(y)
+
 	if(mtry<1) mtry<-floor(sqrt(dim(x.train)[2]))
 	prop.samples<-table(y)
 	if(equalize.classes) prop.samples<-rep(min(prop.samples),length(prop.samples))
@@ -276,6 +298,8 @@ error.rate <- function(dataA, dataB) sum( dataA != dataB ) / length(dataB)
 #---------------------------------------------------------------------------
 svm.est <- function(x.train,y,type="C-svc",kernel="vanilladot",C=1,cross = 4)
 {
+	#print(dim(x.train))
+	#print(dim(y))
 	return ( ksvm(x.train, y, type=type,kernel=kernel,C=C,cross = cross)@cross )
 }
 
@@ -285,6 +309,11 @@ svm.est <- function(x.train,y,type="C-svc",kernel="vanilladot",C=1,cross = 4)
 #---------------------------------------------------------------------------
 imp.rf <- function(x.train,y,equalize.classes=TRUE,tot.trees=500,mtry=0)
 {
+	#print("x")
+	#print(dim(x.train))
+	#print("y")
+	#print(dim(y))
+
 	if(mtry<1) mtry<-floor(sqrt(dim(x.train)[2]))
 	prop.samples<-table(y)
 	if(equalize.classes) prop.samples<-rep(min(prop.samples),length(prop.samples))
@@ -335,7 +364,10 @@ kwfilter <- function(x,y){
 rfe<-function(T,M){
 	F<-1:(dim(T)[2]-1)
 	maxft<-length(F)
+	
 	R<-double(maxft)
+	C<-unlist(T[maxft+1])
+	print(C)
 	for (i in 1:maxft){
 		#print(F)
 		#print(C)
@@ -343,7 +375,7 @@ rfe<-function(T,M){
 		#list.feat<-do.call(M, T[F],T[maxft+1]$Species)#M(T[F],T[maxft+1])
 		#print(C)
 		#print(T[maxft+1]$Species)
-		test<-(M(T[F],T[maxft+1]$Species)$feats)
+		test<-(M(T[F],C)$feats)
 		#print(test)
 		list.feat<-F[test]
 		#print(list.feat$feats)
@@ -351,12 +383,12 @@ rfe<-function(T,M){
 		#print(length(F))
 		#print(f)
 		R[maxft-i+1]<-f
-		print("list.feat")
-		print(list.feat)
+		#print("list.feat")
+		#print(list.feat)
 		#print("maxft-i+1")
 		#print(maxft-i+1)
-		print("f")
-		print(f)
+		#print("f")
+		#print(f)
 		#print("F")
 		#print(F)
 		F<-F[F!=f]
@@ -373,42 +405,118 @@ library(kernlab)
 library(MASS)
 
 #demo: aplicar el wrapper a los datos de iris
-data(iris)
-#FORW.rf <-forward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)
+#data(iris)
+#FORW.rf <-forward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
+#print("test")
 #FORW.lda<-forward.ranking(iris[,-5],iris[,5],method="lda.est")
 
-BACKW.rf <-backward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)
+#BACKW.rf <-backward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)
 #BACKW.lda<-backward.ranking(iris[,-5],iris[,5],method="lda.est")
 
 
 #kwfilter(iris[,-5],iris[,5])
 #print(iris[,-5])
 #print(iris[,5])
-r<-rfe(iris,imp.linsvm)
+#r<-rfe(iris,imp.linsvm)
 
 #a<-imp.rf(iris[,-5],iris[,5])
 
+
+
 #ej2
 
-#ej3
-dataset<-diagonal(10,500,2)
-clases<-dataset[dim(dataset)[2]]
-dataset<-dataset[dim(dataset)[-2]]
-ruido<-replicate(500,replicate(90,generarruido))
-dataset<-cbind(dataset,ruido)
 
-#Wrapper forward
-FORW.rf.est.aciertos<-list()
-for (i in 1:30){
-	#----Dataset generation-----
-	dataset<-diagonal(10,500,2)
-	clases<-dataset[dim(dataset)[2]]
-	dataset<-dataset[dim(dataset)[-2]]
-	ruido<-replicate(500,replicate(90,generarruido))
-	dataset<-cbind(dataset,ruido)
-	#---------------------------
-
-	features<-forward.ranking(dataset,clases,method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)$imp[1:10]
-	FORW.rf.est.aciertos <- append(FORW.rf.est.aciertos, sum(features[features %in% 1:10])/10)
+crea.ruido.unif<-function(n=100,d=2){
+x<-runif(2*n*d,min=-1)	#genero los datos
+dim(x)<-c(2*n,d)
+return(cbind(as.data.frame(x),y=factor(rep(c(-1,1),each=n))))	#le agrego la clase
 }
-print(sum(FORW.rf.est.aciertos)/30)
+
+#datosA
+d<-10
+n<-1000
+datos<-crea.ruido.unif(n=n,d=d)
+
+#tomar 50% de los datos al azar, y hacer que la clase sea el signo de la 8 variable
+shuffle<-sample(1:dim(datos)[1])
+sub<-shuffle[1:dim(datos)[1]*0.5]
+datos[sub,d+1]<-sign(datos[sub,8])
+#tomar 20% de los datos al azar (fuera de los anteriores), y hacer que la clase sea el signo de la 6 variable
+sub<-shuffle[(dim(datos)[1]*0.5):(dim(datos)[1]*0.7)]
+datos[sub,d+1]<-sign(datos[sub,6])
+#tomar 10% de los datos al azar, y hacer que la clase sea el signo de la 4 variable
+sub<-shuffle[(dim(datos)[1]*0.7):(dim(datos)[1]*0.8)]
+datos[sub,d+1]<-sign(datos[sub,4])
+#tomar 5% de los datos al azar, y hacer que la clase sea el signo de la 2 variable
+sub<-shuffle[(dim(datos)[1]*0.8):(dim(datos)[1]*0.85)]
+datos[sub,d+1]<-sign(datos[sub,2])
+datos[,d+1]<-factor(datos[,d+1])
+
+datosA<-datos
+
+claseApos<-dim(datosA)[2]
+
+#datosB
+#generar n=100,d=8
+d<-8
+n<-1000
+datos<-crea.ruido.unif(n=n,d=d)
+#hacer que la clase sea el xor de las 2 primeras variables (es usando el signo)
+datos[,d+1]<-sign(datos[,1]*datos[,2])
+#hacer que las variables 3 y 4 tengan un 50% de correlacion con la clase
+shuffle<-sample(1:dim(datos)[1])
+sub<-shuffle[1:dim(datos)[1]*0.5]
+datos[sub,3]<-abs(datos[sub,3])*datos[sub,d+1]
+shuffle<-sample(1:dim(datos)[1])
+sub<-shuffle[1:dim(datos)[1]*0.5]
+datos[sub,4]<-abs(datos[sub,4])*datos[sub,d+1]
+datos[,d+1]<-factor(datos[,d+1])
+
+datosB<-datos
+
+claseBpos<-dim(datosB)[2]
+
+
+
+print("FORW.rf.dA")
+FORW.rf.dA <-forward.ranking(datosA[,-claseApos],datosA[,claseApos],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
+print("FORW.lda.dA")
+FORW.lda.dA <-forward.ranking(datosA[,-claseApos],datosA[,claseApos],method="lda.est" , verbosity=0)
+#print("FORW.svm.dA")
+#FORW.svm.dA <-forward.ranking(datosA[,-claseApos],datosA[,claseApos],method="svm.est" , verbosity=0)
+
+print("FORW.rf.dB")
+FORW.rf.dB <-forward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
+print("FORW.lda.dB")
+FORW.lda.dB <-forward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="lda.est" , verbosity=0)
+#print("FORW.svm.dB")
+#FORW.svm.dB <-forward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="svm.est" , verbosity=0)
+
+print("BACKW.rf.dA")
+BACKW.rf.dA<-backward.ranking(datosA[,-claseApos],datosA[,claseApos],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
+print("BACKW.lda.dA")
+BACKW.lda.dA<-backward.ranking(datosA[,-claseApos],datosA[,claseApos],method="lda.est" , verbosity=0)
+#print("BACKW.svm.dA")
+#BACKW.svm.dA<-backward.ranking(datosA[,-claseApos],datosA[,claseApos],method="svm.est" , verbosity=0)
+
+print("BACKW.rf.dB")
+BACKW.rf.dB<-backward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
+print("BACKW.lda.dB")
+BACKW.lda.dB<-backward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="lda.est" , verbosity=0)
+#print("BACKW.svm.dB")
+#BACKW.svm.dB<-backward.ranking(datosB[,-claseBpos],datosB[,claseBpos],method="svm.est" , verbosity=0)
+
+print("KWF.dA")
+KWF.dA<-kwfilter(datosA[,-claseApos],datosA[,claseApos])
+print("KWF.dB")
+KWF.dB<-kwfilter(datosB[,-claseBpos],datosB[,claseBpos])
+
+print("RFE.rf.dA")
+RFE.rf.dA<-rfe(datosA,imp.rf)
+print("RFE.rf.dB")
+RFE.rf.dB<-rfe(datosB,imp.rf)
+
+print("RFE.linsvm.dA")
+RFE.linsvm.dA<-rfe(datosA,imp.linsvm)
+print("RFE.linsvm.dB")
+RFE.linsvm.dB<-rfe(datosB,imp.linsvm)
