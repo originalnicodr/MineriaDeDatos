@@ -83,6 +83,7 @@ KWF.dA <- kwfilter(datosA[,-claseApos],datosA[,claseApos])
 print("KWF.dB")
 KWF.dB <- kwfilter(datosB[,-claseBpos],datosB[,claseBpos])
 
+
 print("RFE.rf.dA")
 RFE.rf.dA <- rfe(datosA,imp.rf)
 print("RFE.rf.dB")
@@ -93,8 +94,66 @@ RFE.linsvm.dA <- rfe(datosA,imp.linsvm)
 print("RFE.linsvm.dB")
 RFE.linsvm.dB <- rfe(datosB,imp.linsvm)
 
+#-----------------Plotting--------------------
+x = 1:length(FORW.rf.dA$step.error)
+y = FORW.rf.dA$step.error
+plot(x,y, pch=5, xlab="Included feature", ylab="Error" , main = "Forward Wrapper rf DatosA",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = FORW.rf.dA$ordered.names.list)
+#lines(x,y, col = "gray")
+
+x = 1:length(FORW.lda.dA$step.error)
+y = FORW.lda.dA$step.error
+plot(x,y, pch=5, xlab="Included feature", ylab="Error" , main = "Forward Wrapper lda DatosA",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = FORW.lda.dA$ordered.names.list)
+#lines(x,y, col = "gray")
+
+
+x = 1:length(BACKW.rf.dA$step.error)
+y = BACKW.rf.dA$step.error
+plot(x,y, pch=5, xlab="Excluded feature", ylab="Error" , main = "Backward Wrapper rf DatosA",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = c("None",rev(BACKW.rf.dA$ordered.names.list)[-length(x)]))
+#lines(x,y, col = "gray")
+
+x = 1:length(BACKW.lda.dA$step.error)
+y = BACKW.lda.dA$step.error
+plot(x,y, pch=5, xlab="Excluded feature", ylab="Error" , main = "Backward Wrapper lda DatosA",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = c("None",rev(BACKW.lda.dA$ordered.names.list)[-length(x)]))
+#lines(x,y, col = "gray")
 
 
 
-	features<-forward.ranking(dataset,clases,method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)$ordered.features.list[1:10]
-	sum(features %in% 1:10)/10
+
+
+x = 1:length(FORW.rf.dB$step.error)
+y = FORW.rf.dB$step.error
+plot(x,y, pch=5, xlab="Included feature", ylab="Error" , main = "Forward Wrapper rf DatosB",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = FORW.rf.dB$ordered.names.list)
+#lines(x,y, col = "gray")
+
+x = 1:length(FORW.lda.dB$step.error)
+y = FORW.lda.dB$step.error
+plot(x,y, pch=5, xlab="Included feature", ylab="Error" , main = "Forward Wrapper lda DatosB",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = FORW.lda.dB$ordered.names.list)
+#lines(x,y, col = "gray")
+
+
+x = 1:length(BACKW.rf.dB$step.error)
+y = BACKW.rf.dB$step.error
+plot(x,y, pch=5, xlab="Excluded feature", ylab="Error" , main = "Backward Wrapper rf DatosB",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = c("None",rev(BACKW.rf.dB$ordered.names.list)[-length(x)]))
+#lines(x,y, col = "gray")
+
+x = 1:length(BACKW.lda.dB$step.error)
+y = BACKW.lda.dB$step.error
+plot(x,y, pch=5, xlab="Excluded feature", ylab="Error" , main = "Backward Wrapper lda DatosB",xaxt = "n")
+lines(x[order(x)], y[order(x)], xlim=range(x), ylim=range(y))
+axis(1, at=x, labels = c("None",rev(BACKW.lda.dB$ordered.names.list)[-length(x)]))
+#lines(x,y, col = "gray")
+

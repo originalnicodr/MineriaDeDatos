@@ -47,7 +47,7 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 
 	#print(error.temp)
 
-	#guardo la variable con minimo error como primera. Guardo una lista keep.feat con las que me quedan para seguir eligiendo.
+	#Guardo una lista keep.feat con las que me quedan para seguir eligiendo.
 	list.feat[2]<-which.min(error.temp)#-1 por que cuenta el 0
 	step.error[2]<-error.temp[which.min(error.temp)]
 	keep.feat<-sort(error.temp,decreasing=FALSE,index=T)$ix[-1]
@@ -56,6 +56,10 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 	#print(keep.feat)
 
 	keep.feat<-keep.feat[keep.feat!=list.feat[2]] #saco la que acabo de guardar, esta bien?
+
+	#print(list.feat)
+	#print(error.temp)
+	#print(keep.feat)
 
 	#print("keep.feat after")
 	#print(keep.feat)
@@ -135,6 +139,8 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 		if(verbosity>2) cat("\nFeatures:\n",keep.feat,"\nErrors:\n",class.error)
 		#me quedo con el modelo de minimo error, guardo ese feature en la lista de las elegidas, lo saco de la lista de las que quedan, y actualizo el dataset de partida de la iteracion.
 		best.index<-which.min(class.error)
+		#print("saco la feature:")
+		#print(keep.feat[best.index])
 
 		#print("best.index")
 		#print(best.index)
@@ -176,10 +182,17 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 	list.feat<-c(list.feat[-length(list.feat)],keep.feat)
 	#print(list.feat)
 	#lo doy vuelta por que las ultimas features en sacar son las mas importantes
-	list.feat<-rev(list.feat[-1])#para sacar el 0 que no saca nada
+	#print(list.feat)
+
+	combined.feat.list<-makefeatlist(list.feat,1:max.feat) 
+
+	
+	list.feat<-rev(list.feat[-1])#para sacar el 0 que no saca nada y ordenar por importancia las features
+	#print(list.feat)
 	#print(list.feat)
 
 	#print(list.feat)
+
 
 
 	search.names<-colnames(x)[list.feat]#c("AllVariables",colnames(x)[list.feat])
@@ -196,7 +209,7 @@ backward.ranking <- function(x,y,method,verbosity=0,... )
 	#print("list.feat")
 	#print(list.feat)
 
-	combined.feat.list<-makefeatlist(list.feat,1:max.feat) 
+	
 
 	if(verbosity>1){
 		cat("\n---------\nFinal ranking ",num.feat," features.")
@@ -292,6 +305,7 @@ forward.ranking <- function(x,y,method,verbosity=0,... )
 		x.prev<-x[,list.feat[1:num.feat]]
 
 		step.error[num.feat]<-class.error[best.index]
+		#print(class.error[best.index])
 		
 	}
 
@@ -415,7 +429,6 @@ rfe<-function(T,M){
 	
 	R<-double(maxft)
 	C<-unlist(T[maxft+1])
-	print(C)
 	for (i in 1:maxft){
 		#print(F)
 		#print(C)
@@ -426,8 +439,8 @@ rfe<-function(T,M){
 		test<-(M(T[F],C)$feats)
 		#print(test)
 		list.feat<-F[test]
-		#print(list.feat$feats)
-		f<-list.feat[length(F)]#$feats[length(F)]
+		#print(list.feat)
+		f<-list.feat[1]#$feats[length(F)]
 		#print(length(F))
 		#print(f)
 		R[maxft-i+1]<-f
