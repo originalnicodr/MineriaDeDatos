@@ -1,5 +1,5 @@
 #ej3
-#source('/tp1-functions.R')
+#cargar TP2.R antes
 #-------------------Forward Wrapper rf------------------------------------------
 print("Forward Wrapper rf")
 FORW.rf.est.aciertos<-c()

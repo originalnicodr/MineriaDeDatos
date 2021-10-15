@@ -1,3 +1,4 @@
+#Cargar tp1-functions.R antes
 #-------------------------------------------------------------------------------------
 # Crea la lista de los features usados en cada paso a partir de una secuencia de features a sacar
 # y una lista con todos los features

@@ -1,8 +1,5 @@
-
 #ej2
-
-
-
+#cargar TP2.R antes
 
 #datosA
 d<-10
