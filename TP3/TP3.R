@@ -6,16 +6,16 @@
 library(MASS)
 data(crabs)
 summary(crabs)
-plot(crabs[,4:8],col=as.numeric(crabs[,1]),pch=as.numeric(crabs[,2]))
+plot(scale(crabs[,4:8]),col=as.numeric(crabs[,1]),pch=as.numeric(crabs[,2]))
 
 #En este dataset se sugiere usar una transformación logaritmica de los datos en primer lugar, y a partir de allí usar los
 #datos con distintos escalados (por ejemplo, usar scale() o usar PCA -prcomp()- escalando los datos
 #previamente o usar primero PCA y después escalar los datos, una vez girados).
 
 #aplico k-means
-cckmeans<-kmeans(scale(log(crabs[,4:8])),cent=2)
+cckmeans<-kmeans(scale(crabs[,4:8]),cent=2)
 #plot(crabs[,4:8],pch=as.numeric(crabs[,2]),col=cc$cluster)
-plot(scale(log(crabs[,4])),pch=as.numeric(crabs[,2]),col=cckmeans$cluster)
+plot(scale(crabs[,4]),pch=as.numeric(crabs[,2]),col=cckmeans$cluster)
 abline(v=0)
 
 
