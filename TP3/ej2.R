@@ -27,16 +27,17 @@ weight_sum <- function(datos,k){
 }
 
 GAP <- function(data, K, B){
+    scaled_data<-scale(data)
     weights<-c()
     uniform_weights<-matrix(, nrow = B, ncol = K)
     gap_results<-c()
     s_list<-c()
     for(k in 1:K){
 
-        weights<-c(weights,weight_sum(data,k)) #agrego el calculo de Wk y lo guardo en weights
+        weights<-c(weights,weight_sum(scaled_data,k)) #agrego el calculo de Wk y lo guardo en weights
 
         for(b in 1:B){
-            uniform_weights[b,k]<- weight_sum(reference_dataset_a(data),k)#tengo que guardar los B conjuntos de datos para otras corridas de k o los puedo generar devuelta?
+            uniform_weights[b,k]<- weight_sum(reference_dataset_a(scaled_data),k)#tengo que guardar los B conjuntos de datos para otras corridas de k o los puedo generar devuelta?
         }
 
 
@@ -80,11 +81,12 @@ jaccard <- function(clusters_dataset1, clusters_dataset2) {
 
 #Revisar lo que dice el pdf del tp sobre la estabildiad
 stability <- function(dataset,K,B){
-    scaled_dataset<-dataset
+    scaled_dataset<-scale(dataset)
+    #VEEEEEEEEEEEEEEEEEEER ESTO
     max_noise<-var(scaled_dataset[,1])*0.02 #esta bien?
     
     k_results<-c()
-    for(k in 1:K){
+    for(k in 2:K){#si arrancara con 1 siempre daria como resultado 1
 
         r<-0
         for(b in 1:B){
@@ -92,19 +94,19 @@ stability <- function(dataset,K,B){
             dataset_perturbado<-jitter(as.matrix(scaled_dataset), amount = max_noise) #amount es +-el valor
 
             #----k-means------
-            clusters_dataset<-kmeans(scaled_dataset,cent=k)$cluster
-            clusters_dataset_perturbado<-kmeans(dataset_perturbado,cent=k)$cluster
+            #clusters_dataset<-kmeans(scaled_dataset,cent=k)$cluster
+            #clusters_dataset_perturbado<-kmeans(dataset_perturbado,cent=k)$cluster
             #-----------------
-
-            #----hclust-avarage------
-            #clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="average"),k=k) #"single" "average" "complete"
-            #clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="average"),k=k)
-            #------------------------
 
             #----hclust-single------
             #clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="single"),k=k) #"single" "average" "complete"
             #clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="single"),k=k)
             #-----------------
+
+            #----hclust-avarage------
+            clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="average"),k=k) #"single" "average" "complete"
+            clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="average"),k=k)
+            #------------------------
 
             #----hclust-complete------
             #clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="complete"),k=k) #"single" "average" "complete"
@@ -113,8 +115,8 @@ stability <- function(dataset,K,B){
 
             v1<-as.matrix(clusters_dataset)
             v2<-as.matrix(clusters_dataset_perturbado)
-            v1[ind1]<-cc1
-            v2[ind2]<-cc2
+            #v1[ind1]<-cc1
+            #v2[ind2]<-cc2
             #creo una matriz m con 1 donde los dos puntos estan en el mismo cluster, -1 en distinto cluster y 0 si alguno no esta, para cada clustering
             a<-sqrt(v1%*%t(v1))
             m1<-a / -a + 2*(a==round(a))
@@ -134,10 +136,10 @@ stability <- function(dataset,K,B){
         k_results<-c(k_results,r/B)
     }
     print(k_results)
-    return(which.max(k_results))
+    return(which.max(k_results)+1)#sumo 1 por que la lista de k_results arranca desde k=2
 }
 
-a<-stability(iris[-5],10,30)
+
 
 
 
