@@ -26,18 +26,21 @@ print(stability(gausianas[,-3],10,30))
 
 #-----Iris--------
 print("GAP iris")
-print(GAP(iris[-5],10,30))
+print(GAP(prcomp(scale(log(iris[-5])))$x,10,30))
 print("Stability iris")
-print(stability(iris[-5],10,30))
+print(stability(prcomp(scale(log(iris[-5])))$x,10,30))
 #-----------------
 
 
 #----Lampone------
-load("lampone.Rdata")
 
 #prcomp(lampone[,-dim(lampone)[2]][,-143][,-1])
 
-lampone_prc<-as.matrix(prcomp(lampone[,-c(dim(lampone)[2],143, 1)])[5])#saco las clases y una columna que decia el numero de la muestra nomas, sino me rompia todo
+scaled_lampone<-prcomp(scale(log(iris[-5])))$x#saco las clases y una columna que decia el numero de la muestra nomas, sino me rompia todo
 
+print("GAP lampone")
+print(GAP(scaled_lampone,10,30))
+print("Stability lampone")
+print(stability(scaled_lampone,10,30))
 
 #-----------------

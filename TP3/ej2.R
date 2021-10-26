@@ -12,6 +12,12 @@ reference_dataset_a <- function(dataset){
     return(returnset)
 }
 
+#Ver, por que deberia estar volviendo del PCA a los ejes originales. Ademas deberia saber de antemano que el dataset no se le aplico PCA?
+reference_dataset_b <- function(dataset){
+    r<-reference_dataset_a(prcomp(dataset)$x)
+    return(returnset)
+}
+
 #tengo que aplicar scale antes de hacer esto?
 #sumo la distancia de cada fila con el vector promedio
 weight_sum <- function(datos,k){
@@ -27,17 +33,15 @@ weight_sum <- function(datos,k){
 }
 
 GAP <- function(data, K, B){
-    scaled_data<-scale(data)
-    weights<-c()
     uniform_weights<-matrix(, nrow = B, ncol = K)
     gap_results<-c()
     s_list<-c()
     for(k in 1:K){
 
-        weights<-c(weights,weight_sum(scaled_data,k)) #agrego el calculo de Wk y lo guardo en weights
+        weights<-weight_sum(data,k)
 
         for(b in 1:B){
-            uniform_weights[b,k]<- weight_sum(reference_dataset_a(scaled_data),k)#tengo que guardar los B conjuntos de datos para otras corridas de k o los puedo generar devuelta?
+            uniform_weights[b,k]<- weight_sum(reference_dataset_a(data),k)#tengo que guardar los B conjuntos de datos para otras corridas de k o los puedo generar devuelta?
         }
 
 
@@ -45,7 +49,7 @@ GAP <- function(data, K, B){
         #for(b in 1:B){
         #    r<-r+log(uniform_weights[b][k])-log(weights[k])
         #}
-        r<-sum(log(uniform_weights[,k])-log(weights[k]))/B
+        r<-sum(log(uniform_weights[,k]))/B-log(weights)
 
         gap_results<-c(gap_results,r)
 
@@ -81,9 +85,8 @@ jaccard <- function(clusters_dataset1, clusters_dataset2) {
 
 #Revisar lo que dice el pdf del tp sobre la estabildiad
 stability <- function(dataset,K,B){
-    scaled_dataset<-scale(dataset)
     #VEEEEEEEEEEEEEEEEEEER ESTO
-    max_noise<-var(scaled_dataset[,1])*0.02 #esta bien?
+    max_noise<-var(dataset[,1])*0.02 #esta bien? Si esta bien.
     
     k_results<-c()
     for(k in 2:K){#si arrancara con 1 siempre daria como resultado 1
@@ -91,26 +94,26 @@ stability <- function(dataset,K,B){
         r<-0
         for(b in 1:B){
 
-            dataset_perturbado<-jitter(as.matrix(scaled_dataset), amount = max_noise) #amount es +-el valor
+            dataset_perturbado<-jitter(as.matrix(dataset), amount = max_noise) #amount es +-el valor
 
             #----k-means------
-            #clusters_dataset<-kmeans(scaled_dataset,cent=k)$cluster
+            #clusters_dataset<-kmeans(dataset,cent=k)$cluster
             #clusters_dataset_perturbado<-kmeans(dataset_perturbado,cent=k)$cluster
             #-----------------
 
             #----hclust-single------
-            #clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="single"),k=k) #"single" "average" "complete"
+            #clusters_dataset<-cutree(hclust(dist(dataset),method="single"),k=k) #"single" "average" "complete"
             #clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="single"),k=k)
             #-----------------
 
             #----hclust-avarage------
-            clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="average"),k=k) #"single" "average" "complete"
-            clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="average"),k=k)
+            #clusters_dataset<-cutree(hclust(dist(dataset),method="average"),k=k) #"single" "average" "complete"
+            #clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="average"),k=k)
             #------------------------
 
             #----hclust-complete------
-            #clusters_dataset<-cutree(hclust(dist(scaled_dataset),method="complete"),k=k) #"single" "average" "complete"
-            #clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="complete"),k=k)
+            clusters_dataset<-cutree(hclust(dist(dataset),method="complete"),k=k) #"single" "average" "complete"
+            clusters_dataset_perturbado<-cutree(hclust(dist(dataset_perturbado),method="complete"),k=k)
             #-----------------
 
             v1<-as.matrix(clusters_dataset)
