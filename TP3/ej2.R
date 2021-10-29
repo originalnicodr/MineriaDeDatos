@@ -6,7 +6,7 @@ reference_dataset_a <- function(dataset){
         min<-min(dataset[,i])
         max<-max(dataset[,i])
 
-        ruido<-runif(dim(dataset)[1], min, max) #cuantos puntos tengo que generar?
+        ruido<-runif(dim(dataset)[1], min, max)
         returnset<-cbind(returnset,ruido)
     }
     return(returnset)
@@ -43,7 +43,7 @@ GAP <- function(data, K, B){
         weights<-weight_sum(data,k)
         
         for(b in 1:B){
-            uniform_weights[b,k]<- log(weight_sum(reference_dataset_a(data),k))#tengo que guardar los B conjuntos de datos para otras corridas de k o los puedo generar devuelta?
+            uniform_weights[b,k]<- log(weight_sum(reference_dataset_a(data),k))
         }
 
 
@@ -75,22 +75,9 @@ GAP <- function(data, K, B){
     return(0)
 }
 
-#revisar que este dando bien
-#GAP(iris[-5],2,30)
-
-
-#Entre mas alto el numero, mas similares son los dos conjuntos de datos.
-jaccard <- function(clusters_dataset1, clusters_dataset2) {
-    intersection = length(intersect(clusters_dataset1, clusters_dataset2))
-    union = length(clusters_dataset1) + length(clusters_dataset2) - intersection
-    return (intersection/union)
-}
-
-
-#Revisar lo que dice el pdf del tp sobre la estabildiad
+#stability sin graficar
 stability <- function(dataset,K,B){
-    #VEEEEEEEEEEEEEEEEEEER ESTO
-    max_noise<-var(dataset[,1])*0.02 #esta bien? Si esta bien.
+    max_noise<-var(dataset[,1])*0.02
     
     k_results<-c()
     for(k in 2:K){#si arrancara con 1 siempre daria como resultado 1
@@ -138,7 +125,7 @@ stability <- function(dataset,K,B){
             #print(score)
 
 
-            r<-r+score#jaccard(clusters_dataset,clusters_dataset_perturbado)
+            r<-r+score
 
         }
         k_results<-c(k_results,r/B)
@@ -149,8 +136,7 @@ stability <- function(dataset,K,B){
 
 
 stability_new <- function(dataset,K,B){
-    #VEEEEEEEEEEEEEEEEEEER ESTO
-    max_noise<-var(dataset[,1])*0.02 #esta bien? Si esta bien.
+    max_noise<-var(dataset[,1])*0.02
     
     k_results<-c()
     for(k in 2:K){#si arrancara con 1 siempre daria como resultado 1
@@ -162,8 +148,8 @@ stability_new <- function(dataset,K,B){
             dataset_perturbado2<-jitter(as.matrix(dataset), amount = max_noise)
 
             #----k-means------
-            #clusters_dataset_perturbado1<-kmeans(dataset_perturbado1,cent=k)$cluster
-            #clusters_dataset_perturbado2<-kmeans(dataset_perturbado2,cent=k)$cluster
+            clusters_dataset_perturbado1<-kmeans(dataset_perturbado1,cent=k)$cluster
+            clusters_dataset_perturbado2<-kmeans(dataset_perturbado2,cent=k)$cluster
             #-----------------
 
             #----hclust-single------
@@ -177,8 +163,8 @@ stability_new <- function(dataset,K,B){
             #------------------------
 
             #----hclust-complete------
-            clusters_dataset_perturbado1<-cutree(hclust(dist(dataset_perturbado1),method="complete"),k=k) #"single" "average" "complete"
-            clusters_dataset_perturbado2<-cutree(hclust(dist(dataset_perturbado2),method="complete"),k=k)
+            #clusters_dataset_perturbado1<-cutree(hclust(dist(dataset_perturbado1),method="complete"),k=k) #"single" "average" "complete"
+            #clusters_dataset_perturbado2<-cutree(hclust(dist(dataset_perturbado2),method="complete"),k=k)
             #-----------------
 
             v1<-as.matrix(clusters_dataset_perturbado1)
@@ -197,27 +183,27 @@ stability_new <- function(dataset,K,B){
             score<-sum((m1*m2)[upper.tri(m1)]>0)/(validos*(validos-1)/2)
             #print(score)
 
-
-            #r<-r+score#jaccard(clusters_dataset,clusters_dataset_perturbado)
-            r<-c(r,score)#jaccard(clusters_dataset,clusters_dataset_perturbado)
+            #r<-r+score
+            r<-c(r,score)
 
         }
         k_results<-cbind(k_results,r)
     }
     #print(k_results)
 
-    K_N<-ncol(k_results)
+
     #print(k_results)
     #x11()
-    #plot(NULL, main='Cummulative score', xlim = c(.9, 1), ylim = c(0, 1), xlab = 'similarity', ylab = 'cummulative')
     plot(NULL, xlim = c(.75, 1), ylim = c(0, 1), xlab = 'similarity', ylab = 'cummulative')
-    legend('topleft', legend = paste('k =', 2:K_N), lty = 1, cex = .8, col = 2:K_N)
-    #legend('topleft',legend = paste('k =', 2:K_N),col = 2:K_N)
-    for (i in 2:K_N) {
+
+    n_candidates<-dim(k_results)[2]
+
+    legend('topleft', legend = paste('k =', 2:n_candidates), lty = 1, cex = .8, col = 2:n_candidates)
+    for (i in 2:n_candidates) {
         x <- k_results[,i]
         lines( sort(x), (1:length(x))/length(x), type="l", col=i)
     }
-
+    #Ademas de graficar la similitud, devolvemos un resultado
     return(which.max(colMeans(k_results)+1))#sumo 1 por que la lista de k_results arranca desde k=2
 }
 
