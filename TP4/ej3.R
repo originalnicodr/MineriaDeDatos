@@ -1,5 +1,7 @@
 library(e1071)
-
+library(groupdata2)
+library("adabag")
+library(randomForest)
 
 #como uso lampone con boosting si no tengo set de test?
 # tengo que usar los valores para boosting y random forest que estuve usando en el ej 1 y 2?
@@ -53,32 +55,81 @@ length(filter(lampone[,"N_tipo"],2))
 crossvalidate_svmradial <- function(data, k = 10,classname='N_tipo'){
     folded_data <- fold(data, k, cat_col = classname)#creates a column called .folds used in the crossvalidate function
     
-    for (i in 1:20){
+    results<-c()
+    #for (c in c(10^(-5),10^(-4),10^(-3),10^(-2),10^(-1),1,10,10^2,10^3,10^4,10^5)){
+    for (c in c(10^(-5),10^(-4.9),10^(-4.8),10^(-4.7),10^(-4.6),10^(-4.5),10^(-4.4),10^(-4.3),10^(-4.2),10^(-4.1))){
         # Initialize empty list for recording performances
         performances <- c()
-        # One iteration per fold
         for (fold in 1:k){
             # Create training set for this iteration
             # Subset all the datapoints where .folds does not match the current fold
             training_set <- data[folded_data$.folds != fold,]
             # Create test set for this iteration
             # Subset all the datapoints where .folds matches the current fold
-
-
             testing_set <- data[folded_data$.folds == fold,]        
             #modelo <-svm(formula = N_tipo ~ ., data = training_set, kernel = "polynomial", cost = 10, scale = FALSE)
-            modelo <-svm(formula = N_tipo ~ ., data = training_set, kernel = "radial", cost = 10, scale = FALSE)       
-            
+            modelo <-svm(formula = N_tipo ~ ., data = training_set, kernel = "radial", cost = c, scale = FALSE)       
             #print(modelo)
             prediction<-predict(modelo, newdata = testing_set)
             error<-1-sum(prediction==training_set[,"N_tipo"])/dim(training_set)[1]        
             performances<-c(performances,error)
         }
-        return(sum(performances)/k)
+        #return(sum(performances)/k)
+        results<-c(results,mean(performances))
     }
+    index<-which.min(results)
+    #print(results)
+    print(index)
+    return(results[index])
+}
+crossvalidate_svmradial(lampone)
+
+crossvalidate_svmpoly <- function(data, k = 10,classname='N_tipo'){
+    folded_data <- fold(data, k, cat_col = classname)#creates a column called .folds used in the crossvalidate function
+    
+    results<-c()
+    #for (c in c(10^(-5),10^(-4),10^(-3),10^(-2),10^(-1),1,10,10^2,10^3,10^4,10^5)){
+    for (c in c(10^(-5),10^(-4.9),10^(-4.8),10^(-4.7),10^(-4.6),10^(-4.5),10^(-4.4),10^(-4.3),10^(-4.2),10^(-4.1))){
+        for(g in c(10^(-6),10^(-5),10^(-4),10^(-3),10^(-2),10^(-1))){
+            for(d in 1:10){
+                for(coeficiente in c(0.1, 1, 10)){
+                    # Initialize empty list for recording performances
+                    performances <- c()
+                    for (fold in 1:k){
+                        # Create training set for this iteration
+                        # Subset all the datapoints where .folds does not match the current fold
+                        training_set <- data[folded_data$.folds != fold,]
+                        # Create test set for this iteration
+                        # Subset all the datapoints where .folds matches the current fold
+                        testing_set <- data[folded_data$.folds == fold,]        
+                        modelo <-svm(formula = N_tipo ~ ., data = training_set, kernel = "polynomial", cost = c, scale = FALSE, degree=d, coef0=coeficiente, gamma = g)
+                        #modelo <-svm(formula = N_tipo ~ ., data = training_set, kernel = "radial", cost = c, scale = FALSE)       
+                        #print(modelo)
+                        print(modelo)
+                        prediction<-predict(modelo, newdata = testing_set)
+                        error<-1-sum(prediction==training_set[,"N_tipo"])/dim(training_set)[1]        
+                        performances<-c(performances,error)
+                    }
+                    #return(sum(performances)/k)
+                    results<-c(results,mean(performances))
+                }
+            }
+        }
+    }
+    index<-which.min(results)
+    #print(results)
+    print(index)
+    return(results[index])
 }
 
 
+#crossvalidate_svmpoly <- function(data, k = 10,classname='N_tipo'){
+#    folded_data <- fold(data, k, cat_col = classname)#creates a column called .folds used in the crossvalidate function
+#    modelo <- tune.svm(N_tipo~.,kernel = "polynomial" ,data = data, cost=10^(-5:0), gamma = 10^(-6:-1), degree = 1:10, coef0 = 10^(-2:2))$best.parameters
+#    print(modelo)
+#}
+
+crossvalidate_svmpoly(lampone)
 
 
 
@@ -100,10 +151,10 @@ crossvalidate_boosting <- function(data, k = 10, classname="N_tipo"){
             testing_set <- data[folded_data$.folds == fold,]        
 
 
-            adaboost <- boosting(N_tipo~., data=train_set, mfinal=200,
+            adaboost <- boosting(N_tipo~., data=training_set, mfinal=200,
                              coef="Freund",
                              control=rpart.control(maxdepth=i))#esto va a devolver error si el dataset dado no tiene columna "class"
-            performances<-c(performances,predict.boosting(adaboost, newdata=test_set)$error)#necesito mas cosas ademas del error?
+            performances<-c(performances,predict.boosting(adaboost, newdata=testing_set)$error)#necesito mas cosas ademas del error?
         }
         errors<-c(errors,sum(performances)/k)
     }
@@ -111,7 +162,6 @@ crossvalidate_boosting <- function(data, k = 10, classname="N_tipo"){
     print(min_index)
     return(errors[min_index])
 }
-
 crossvalidate_boosting(lampone)
 
 
@@ -145,7 +195,7 @@ crossvalidate_randomforest <- function(data, k = 10, classname='N_tipo'){
     print(min_index)
     return(errors[min_index])
 }
-
+crossvalidate_randomforest(lampone)
 
 
 
