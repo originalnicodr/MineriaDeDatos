@@ -21,7 +21,7 @@ exec_boosting <- function(train_dataset,test_dataset,max_trees=200){
     print(test_error)
 
     # Create a first line
-    plot(1:20, test_error, type = "b", frame = FALSE, pch = 19, col = "red", xlab = "Max Tree Depth", ylab = "Error", main="Diagonal boosting classification")
+    plot(1:20, test_error, type = "b", frame = FALSE, pch = 19, col = "red", xlab = "Max Tree Depth", ylab = "Error", main="Espirales boosting classification")
     # Add a second line
     #lines(1:2, test_error, pch = 18, col = "blue", type = "b", lty = 2)
     # Add a legend to the plot
@@ -30,20 +30,8 @@ exec_boosting <- function(train_dataset,test_dataset,max_trees=200){
     #ggplot(as.data.frame(test_error), aes(1:length(test_error)))
     #+ geom_line(aes(y = as.data.frame(train_error))) #+ theme(legend.position="bottom")
 }
-exec_boosting(diag_train,diag_test)
-
-    ggplot(as.data.frame(cbind(cbind(1:5,5:1),1:5)), aes(x=V1)) + 
-    geom_line(aes(y = V2), color = "darkred") + 
-    geom_line(aes(y = V3), color="steelblue", linetype="twodash") 
-
-
-    plot(1:2, 1:2, type = "b", frame = FALSE, pch = 19, 
-         col = "red", xlab = "Max Tree Depth", ylab = "Error")
-    # Add a second line
-    lines(1:2, 2:1, pch = 18, col = "blue", type = "b", lty = 2)
-    # Add a legend to the plot
-    legend("topleft", legend=c("Test Error", "Training Error"),
-           col=c("red", "blue"), lty = 1:2, cex=0.8)
+#exec_boosting(diag_train,diag_test)
+exec_boosting(esp_train,esp_test)
 
 
 library(randomForest)
