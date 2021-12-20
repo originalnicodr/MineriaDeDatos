@@ -1,4 +1,3 @@
-#Cargar tp1-functions.R antes
 #-------------------------------------------------------------------------------------
 # Crea la lista de los features usados en cada paso a partir de una secuencia de features a sacar
 # y una lista con todos los features
@@ -427,61 +426,51 @@ kwfilter <- function(x,y){
 rfe<-function(T,M){
 	F<-1:(dim(T)[2]-1)
 	maxft<-length(F)
+
+	print(maxft)
 	
 	R<-double(maxft)
 	C<-unlist(T[maxft+1])
 	for (i in 1:maxft){
-		#print(F)
-		#print(C)
-		#y.pos<-length(F)
-		#list.feat<-do.call(M, T[F],T[maxft+1]$Species)#M(T[F],T[maxft+1])
-		#print(C)
-		#print(T[maxft+1]$Species)
+		print(T[F])
+		print(C)
 		test<-(M(T[F],C)$feats)
-		#print(test)
 		list.feat<-F[test]
-		#print(list.feat)
 		f<-list.feat[1]#$feats[length(F)]
-		#print(length(F))
-		#print(f)
 		R[maxft-i+1]<-f
-		#print("list.feat")
-		#print(list.feat)
-		#print("maxft-i+1")
-		#print(maxft-i+1)
-		#print("f")
-		#print(f)
-		#print("F")
-		#print(F)
 		F<-F[F!=f]
-		#print("F<-F[F!=f]")
-		#print(F)
 	}
 	return(R)
 }
 
+#la original me estaba dando problemas con los tipos
+rfe_new <- function(x, y, method = "imp.rf")
+{
+    var_names <- colnames(x)
+    nvars <- ncol(x)
+    vars <- 1:nvars
+    ranking <- c()
+
+    for (i in 1:(nvars -1))
+    {
+        partial_ranking <- do.call(method, list(x[, vars], y))$feats
+        worst_ranked <- partial_ranking[1]
+
+        ranking <- c(ranking, var_names[worst_ranked])
+
+        vars <- vars[-worst_ranked]
+        var_names <- var_names[-worst_ranked]
+    }
+
+    ranking <- c(ranking, var_names)
+
+    return(ranking)
+}
 
 
 library(randomForest)
 library(kernlab)
 library(MASS)
-
-#demo: aplicar el wrapper a los datos de iris
-#data(iris)
-#FORW.rf <-forward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=0)
-#print("test")
-#FORW.lda<-forward.ranking(iris[,-5],iris[,5],method="lda.est")
-
-#BACKW.rf <-backward.ranking(iris[,-5],iris[,5],method="rf.est" ,tot.trees=100,equalize.classes=F, verbosity=3)
-#BACKW.lda<-backward.ranking(iris[,-5],iris[,5],method="lda.est")
-
-
-#kwfilter(iris[,-5],iris[,5])
-#print(iris[,-5])
-#print(iris[,5])
-#r<-rfe(iris,imp.linsvm)
-
-#a<-imp.rf(iris[,-5],iris[,5])
 
 
 crea.ruido.unif<-function(n=100,d=2){
