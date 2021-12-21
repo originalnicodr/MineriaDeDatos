@@ -28,8 +28,6 @@ ToKSP<-function(date){
 clean_dataset<-Traffic.accidents_2019_Leeds
 
 
-
-
 #Balanceo de clase
 
 temp_dataset<-clean_dataset[clean_dataset[, 16]==3,]
@@ -55,7 +53,7 @@ clean_dataset$"Number.of.Vehicles" <- NULL
 clean_dataset$"Vehicle.Number" <- NULL 
 
 
-clean_dataset[,"Sex.of.Casualty"][clean_dataset[,"Sex.of.Casualty"]==2]<- clean_dataset[,"Sex.of.Casualty"][clean_dataset[,"Sex.of.Casualty"]==2] -3 # para mantener el rango entre -1 y 1, no creo que cambie en nada
+#clean_dataset[,"Sex.of.Casualty"][clean_dataset[,"Sex.of.Casualty"]==2]<- clean_dataset[,"Sex.of.Casualty"][clean_dataset[,"Sex.of.Casualty"]==2] -3 # para mantener el rango entre -1 y 1, no creo que cambie en nada
 
 clean_dataset<-clean_dataset[clean_dataset[,"Weather.Conditions"]!=9,] #elimino entradas que tienen clima no clasificado
 
@@ -149,8 +147,8 @@ xlab="Easting", ylab="Northing", main="Accidents in Cartesian coordinates")
 #plot(clean_dataset$"Grid.Ref..Easting",clean_dataset$"Grid.Ref..Northing",col = dcolor,
 #xlab="Easting", ylab="Northing", main="Accidents in Cartesian coordinates")
 
-barplot(prop.table(table(clean_dataset$Sex.of.Casualty)),col=c("yellow","blue"),
-        legend.text=c("Mujer","Hombre"),main="Sexo de la victima",
+barplot(prop.table(table(clean_dataset$Sex.of.Casualty)),col=c("blue","yellow"),
+        legend.text=c("Hombre","Mujer"),main="Sexo de la victima",
         ylab ="Frecuencias Relativas",las=1,font.axis=4)
 
 barplot(prop.table(table(clean_dataset$Casualty.Severity)),col=c("red","orange","yellow"),
@@ -202,13 +200,7 @@ cat(" ", res_rf,"\n",sep=", ")
 #3)
 #---------------------------------------------------------------
 
-#tengo que sacar cada variable que creo que los datos pueden reflejar para despues probar abajo
-#Probar con Casualty.Class, o X1.Road.Class
 scaled_dataset<-scale(prcomp(clean_dataset[,-class_index],retx=T)$x) #no tiene sentido aplicar log no? lo saque por que tengo muchos valores iguales a 0. A menos que solo aplique log a los valores de fecha y hora?
-
-
-
-
 
 
 #---------------------k-means----------------------------
@@ -227,12 +219,6 @@ print(cont.table[,class.match])
 
 #---------------------------------------------------------
 
-
-
-
-#MUY MAL NO SIRVE, ME CATEGORIZA TODO COMO GRAVE (ES DONDE HAY MAS DATOS)
-#Capaz sirva para otra variable/clasificacion
-#O conviene mejor clasificarlo para mantener el error de que sea grave y se clasifique mal al minimo?
 #------------------h-clust-single-------------------------
 cchlust<-hclust(dist(scaled_dataset),method="single") #"single" "average" "complete"
 plot(cchlust)
@@ -247,7 +233,7 @@ class.match <- matchClasses(as.matrix(cont.table),method="exact")
 print(cont.table[,class.match])
     #---------------------------------------------------------
 
-#LO MISMO
+
 #------------------h-clust-average-------------------------
 cchlust<-hclust(dist(scaled_dataset),method="average") #"single" "average" "complete"
 plot(cchlust)
@@ -264,7 +250,7 @@ print(cont.table[,class.match])
 
 #---------------------------------------------------------
 
-#LO MISMO
+
 #------------------h-clust-complete-------------------------
 cchlust<-hclust(dist(clean_dataset[,-class_index]),method="complete") #"single" "average" "complete"
 plot(cchlust)
@@ -280,12 +266,6 @@ class.match <- matchClasses(as.matrix(cont.table),method="exact")
 print(cont.table[,class.match])
     #---------------------------------------------------------
 #---------------------------------------------------------
-
-
-
-
-
-
 
 
 #Opcional
